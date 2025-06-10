@@ -56,14 +56,12 @@ const Books = () => {
         },
     });
 
-    const fetchBooks = async (): Promise<Book[]> => {
-        const response = await axios.get<Book[]>('/books');
-        return response.data;
-    };
-
-    const { data: books = initialBooks, isLoading } = useQuery({
+    const { data: books = initialBooks, isLoading } = useQuery<Book[]>({
         queryKey: ['books'],
-        queryFn: fetchBooks,
+        queryFn: async () => {
+            const response = await axios.get<Book[]>('/books');
+            return response.data;
+        },
         initialData: initialBooks,
     });
 
@@ -85,7 +83,6 @@ const Books = () => {
     });
 
     const onSubmit = (values: z.infer<typeof formSchema>) => {
-        console.log('Submitting book:', values);
         addBookMutation.mutate(values);
     };
 
