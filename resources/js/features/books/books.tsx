@@ -6,7 +6,7 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem } from '@/types';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { Head } from '@inertiajs/react';
+import { Head, usePage } from '@inertiajs/react';
 import { LucideCircleHelp } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -29,7 +29,18 @@ const breadcrumbs: BreadcrumbItem[] = [
     },
 ];
 
+interface Book {
+    id: number;
+    title: string;
+}
+
+interface PageProps {
+    books: Book[];
+}
+
 const Books = () => {
+    const { books } = usePage().props as PageProps;
+
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
         defaultValues: {
@@ -52,6 +63,16 @@ const Books = () => {
                         <CardDescription>Enter the details of your book below</CardDescription>
                     </CardHeader>
                     <CardContent>
+                        {books.length > 0 && (
+                            <div className="mb-4">
+                                <h2 className="mb-2 text-lg font-semibold">Existing Books</h2>
+                                <ul className="list-disc pl-5">
+                                    {books.map((book) => (
+                                        <li key={book.id}>{book.title}</li>
+                                    ))}
+                                </ul>
+                            </div>
+                        )}
                         <Form {...form}>
                             <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
                                 <FormField
