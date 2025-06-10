@@ -13,6 +13,7 @@ Route::middleware(['auth', 'verified'])->group(function () {
         return Inertia::render('dashboard');
     })->name('dashboard');
     Route::get('/books', [BookController::class, 'index'])->name('books.index');
+    Route::post('/books', [BookController::class, 'store'])->name('books.store');
 });
 
 require __DIR__.'/settings.php';

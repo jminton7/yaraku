@@ -9,12 +9,15 @@ import { BreadcrumbItem } from '@/types';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { PageProps as InertiaPageProps } from '@inertiajs/core';
 import { Head, usePage } from '@inertiajs/react';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
+import axios from 'axios';
 import { Edit, LucideCircleHelp, Trash2 } from 'lucide-react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
 //TODO no special characters allowed in title and author
 //And no blanks
+//and max 255
 const formSchema = z.object({
     title: z.string().min(2, {
         message: 'Title must be at least 2 characters.',
@@ -42,7 +45,8 @@ interface PageProps extends InertiaPageProps {
 }
 
 const Books = () => {
-    const { books } = usePage<PageProps>().props;
+    const { books: initialBooks } = usePage<PageProps>().props;
+    const queryClient = useQueryClient();
 
     const form = useForm<z.infer<typeof formSchema>>({
         resolver: zodResolver(formSchema),
@@ -52,8 +56,37 @@ const Books = () => {
         },
     });
 
-    const onSubmit = () => {
-        console.log('Submitting');
+    const fetchBooks = async (): Promise<Book[]> => {
+        const response = await axios.get<Book[]>('/books');
+        return response.data;
+    };
+
+    const { data: books = initialBooks, isLoading } = useQuery({
+        queryKey: ['books'],
+        queryFn: fetchBooks,
+        initialData: initialBooks,
+    });
+
+    const addBookMutation = useMutation({
+        mutationFn: async (bookData: z.infer<typeof formSchema>) => {
+            const response = await axios.post<Book>('/books', bookData);
+            return response.data;
+        },
+        onSuccess: (newBook) => {
+            queryClient.setQueryData<Book[]>(['books'], (oldBooks) => {
+                return [...(oldBooks || []), newBook];
+            });
+            form.reset();
+            console.log('Book added successfully!');
+        },
+        onError: (error) => {
+            console.error('Error adding book:', error);
+        },
+    });
+
+    const onSubmit = (values: z.infer<typeof formSchema>) => {
+        console.log('Submitting book:', values);
+        addBookMutation.mutate(values);
     };
 
     return (
@@ -115,8 +148,8 @@ const Books = () => {
                                     )}
                                 />
                                 <hr className="my-8 h-px border-0 bg-gray-200 dark:bg-gray-700"></hr>
-                                <Button type="submit" className="w-max-sm hover:bg-sky-700">
-                                    Add
+                                <Button type="submit" className="w-max-sm hover:bg-sky-700" disabled={addBookMutation.isPending}>
+                                    {addBookMutation.isPending ? 'Adding...' : 'Add'}
                                 </Button>
                             </form>
                         </Form>
@@ -138,7 +171,7 @@ const Books = () => {
                                 </TableRow>
                             </TableHeader>
                             <TableBody>
-                                {books.length > 0 ? (
+                                {books.length > 0 && !isLoading ? (
                                     books.map((book) => (
                                         <TableRow key={book.id}>
                                             <TableCell className="font-medium">{book.title}</TableCell>

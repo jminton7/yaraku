@@ -10,8 +10,20 @@ class BookController extends Controller
 {
     public function index()
     {
-        // Logic to retrieve and display books
-        $books = Book::all();  
-        return Inertia::render('books/index', compact('books'));;
+        $books = Book::all(); 
+        return Inertia::render('books/index', compact('books'));
+    }
+
+    public function store(Request $request)
+    {
+        $request->validate([
+            'title' => 'required|string|max:255',
+            'author' => 'required|string|max:255',
+        ]);
+
+        $book = Book::create($request->only('title', 'author')); 
+
+
+        return response()->json($book, 201); 
     }
 }
