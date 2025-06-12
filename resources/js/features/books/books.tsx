@@ -19,12 +19,11 @@ import { Tooltip, TooltipContent, TooltipTrigger } from '@/components/ui/tooltip
 import AppLayout from '@/layouts/app-layout';
 import { BreadcrumbItem } from '@/types';
 import { zodResolver } from '@hookform/resolvers/zod';
-import { PageProps as InertiaPageProps } from '@inertiajs/core';
 import { Head, usePage } from '@inertiajs/react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import { BookOpen, Edit, LucideCircleHelp, Plus, Search, Sparkles, Trash2 } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { ArrowDown, ArrowUp, BookOpen, Edit, LucideCircleHelp, Plus, Search, Sparkles, Trash2 } from 'lucide-react';
+import { useCallback, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 
@@ -50,12 +49,15 @@ interface Book {
     author: string;
 }
 
-interface PageProps extends InertiaPageProps {
+interface PageProps {
     books: Book[];
     search: string;
+    sortField: string;
+    sortDirection: 'asc' | 'desc';
+    [key: string]: unknown;
 }
 
-// Custom hook for debounced value
+// Debounce the search term to avoid excessive API calls
 const useDebounce = (value: string, delay: number) => {
     const [debouncedValue, setDebouncedValue] = useState(value);
 
@@ -73,13 +75,19 @@ const useDebounce = (value: string, delay: number) => {
 };
 
 const Books = () => {
-    const { books: initialBooks, search: initialSearch } = usePage<PageProps>().props;
+    const {
+        books: initialBooks,
+        search: initialSearch,
+        sortField: initialSortField,
+        sortDirection: initialSortDirection,
+    } = usePage<PageProps>().props;
     const queryClient = useQueryClient();
     const [editingBook, setEditingBook] = useState<Book | null>(null);
     const [isEditSheetOpen, setIsEditSheetOpen] = useState(false);
     const [searchTerm, setSearchTerm] = useState(initialSearch || '');
+    const [sortField, setSortField] = useState<string>(initialSortField || 'id');
+    const [sortDirection, setSortDirection] = useState<'asc' | 'desc'>(initialSortDirection || 'asc');
 
-    // Debounce the search term to avoid excessive API calls
     const debouncedSearchTerm = useDebounce(searchTerm, 300);
 
     const form = useForm<z.infer<typeof formSchema>>({
@@ -98,17 +106,17 @@ const Books = () => {
         },
     });
 
+    const fetchBooks = useCallback(async () => {
+        const response = await axios.get<Book[]>('/books', {
+            params: { search: debouncedSearchTerm, sortField, sortDirection },
+        });
+        return response.data;
+    }, [debouncedSearchTerm, sortField, sortDirection]);
+
     const { data: books = initialBooks, isLoading } = useQuery<Book[]>({
-        queryKey: ['books', debouncedSearchTerm],
-        queryFn: async () => {
-            console.log('Fetching books with search term:', debouncedSearchTerm);
-            const response = await axios.get<Book[]>('/books', {
-                params: { search: debouncedSearchTerm },
-            });
-            return response.data;
-        },
+        queryKey: ['books', debouncedSearchTerm, sortField, sortDirection],
+        queryFn: fetchBooks,
         initialData: initialBooks,
-        enabled: true, // Enable the query and refetch when the debounced search term changes
         staleTime: 0, // Always refetch when query key changes
     });
 
@@ -118,9 +126,8 @@ const Books = () => {
             return response.data;
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['books', debouncedSearchTerm] });
+            queryClient.invalidateQueries({ queryKey: ['books', debouncedSearchTerm, sortField, sortDirection] });
             form.reset();
-            console.log('Book added successfully!');
         },
         onError: (error) => {
             console.error('Error adding book:', error);
@@ -133,11 +140,10 @@ const Books = () => {
             return response.data;
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['books', debouncedSearchTerm] });
+            queryClient.invalidateQueries({ queryKey: ['books', debouncedSearchTerm, sortField, sortDirection] });
             setIsEditSheetOpen(false);
             setEditingBook(null);
             editForm.reset();
-            console.log('Book updated successfully!');
         },
         onError: (error) => {
             console.error('Error updating book:', error);
@@ -150,8 +156,7 @@ const Books = () => {
             return id;
         },
         onSuccess: () => {
-            queryClient.invalidateQueries({ queryKey: ['books', debouncedSearchTerm] });
-            console.log('Book deleted successfully!');
+            queryClient.invalidateQueries({ queryKey: ['books', debouncedSearchTerm, sortField, sortDirection] });
         },
         onError: (error) => {
             console.error('Error deleting book:', error);
@@ -186,8 +191,16 @@ const Books = () => {
     };
 
     const handleSearchChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-        console.log('Search term changed:', e.target.value);
         setSearchTerm(e.target.value);
+    };
+
+    const handleSort = (field: string) => {
+        if (sortField === field) {
+            setSortDirection((prev) => (prev === 'asc' ? 'desc' : 'asc'));
+        } else {
+            setSortField(field);
+            setSortDirection('asc');
+        }
     };
 
     return (
@@ -320,8 +333,25 @@ const Books = () => {
                             <Table>
                                 <TableHeader>
                                     <TableRow className="bg-gray-50 dark:bg-gray-800/50">
-                                        <TableHead className="font-semibold text-gray-900 dark:text-gray-100">Title</TableHead>
-                                        <TableHead className="font-semibold text-gray-900 dark:text-gray-100">Author</TableHead>
+                                        <TableHead
+                                            className="cursor-pointer font-semibold text-gray-900 transition-colors hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-gray-700/50"
+                                            onClick={() => handleSort('title')}
+                                        >
+                                            <div className="flex items-center gap-1">
+                                                Title
+                                                {sortField === 'title' && (sortDirection === 'asc' ? <ArrowUp size={16} /> : <ArrowDown size={16} />)}
+                                            </div>
+                                        </TableHead>
+                                        <TableHead
+                                            className="cursor-pointer font-semibold text-gray-900 transition-colors hover:bg-gray-100 dark:text-gray-100 dark:hover:bg-gray-700/50"
+                                            onClick={() => handleSort('author')}
+                                        >
+                                            <div className="flex items-center gap-1">
+                                                Author
+                                                {sortField === 'author' &&
+                                                    (sortDirection === 'asc' ? <ArrowUp size={16} /> : <ArrowDown size={16} />)}
+                                            </div>
+                                        </TableHead>
                                         <TableHead className="text-right font-semibold text-gray-900 dark:text-gray-100">Actions</TableHead>
                                     </TableRow>
                                 </TableHeader>
@@ -484,22 +514,8 @@ const Books = () => {
                                         </TableRow>
                                     ) : (
                                         <TableRow>
-                                            <TableCell colSpan={3} className="py-12 text-center">
-                                                <div className="flex flex-col items-center justify-center space-y-4">
-                                                    <div className="rounded-full bg-gray-100 p-4 dark:bg-gray-800">
-                                                        <BookOpen className="h-8 w-8 text-gray-400" />
-                                                    </div>
-                                                    <div>
-                                                        <p className="text-lg font-medium text-gray-900 dark:text-gray-100">
-                                                            {debouncedSearchTerm ? 'No books found' : 'No books yet'}
-                                                        </p>
-                                                        <p className="text-gray-500 dark:text-gray-400">
-                                                            {debouncedSearchTerm
-                                                                ? `Try a different search term`
-                                                                : 'Add your first book above to get started!'}
-                                                        </p>
-                                                    </div>
-                                                </div>
+                                            <TableCell colSpan={3} className="py-12 text-center text-gray-500 dark:text-gray-400">
+                                                No books found. Try adjusting your search or add a new book!
                                             </TableCell>
                                         </TableRow>
                                     )}

@@ -17,6 +17,19 @@ class BookController extends Controller
                   ->orWhere('author', 'LIKE', "%{$searchTerm}%");
             });
         }
+
+        $sortField = $request->input('sortField', 'id');  
+        $sortDirection = $request->input('sortDirection', 'asc');  
+
+        if (!in_array($sortField, ['title', 'author', 'id'])) {
+            $sortField = 'id';  
+        }
+
+        if (!in_array(strtolower($sortDirection), ['asc', 'desc'])) {
+            $sortDirection = 'asc';
+        }
+
+        $query->orderBy($sortField, $sortDirection); 
         
         $books = $query->get();
         
@@ -26,7 +39,9 @@ class BookController extends Controller
         
         return Inertia::render('books/index', [
             'books' => $books,
-            'search' => $request->search ?? ''
+            'search' => $request->search ?? '',
+            'sortField' => $sortField,
+            'sortDirection' => $sortDirection       
         ]);
     }
     
