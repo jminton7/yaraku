@@ -75,6 +75,8 @@ class BookController extends Controller
 
     public function export(Request $request)
     {
+        // For validation failures to return JSON, the request must ask for it.
+        // The test will be updated to use getJson().
         $request->validate([
             'format' => 'required|in:csv,xml',
             'type' => 'required|in:full,titles,authors'
@@ -87,7 +89,7 @@ class BookController extends Controller
             $searchTerm = $request->search;
             $query->where(function ($q) use ($searchTerm) {
                 $q->where('title', 'LIKE', "%{$searchTerm}%")
-                  ->orWhere('author', 'LIKE', "%{$searchTerm}%");
+                    ->orWhere('author', 'LIKE', "%{$searchTerm}%");
             });
         }
 
@@ -112,6 +114,10 @@ class BookController extends Controller
         }
     }
 
+    /**
+     * MODIFIED: Switched from a StreamedResponse to a regular Response.
+     * This builds the CSV content in memory, making it easily testable.
+     */
     private function exportCsv($books, $type)
     {
         $filename = 'books_' . $type . '_' . date('Y-m-d_H-i-s') . '.csv';
@@ -121,33 +127,37 @@ class BookController extends Controller
             'Content-Disposition' => 'attachment; filename="' . $filename . '"',
         ];
 
-        $callback = function() use ($books, $type) {
-            $file = fopen('php://output', 'w');
-            
-            // Add headers based on type
-            if ($type === 'full') {
-                fputcsv($file, ['Title', 'Author']);
-                foreach ($books as $book) {
-                    fputcsv($file, [$book->title, $book->author]);
-                }
-            } elseif ($type === 'titles') {
-                fputcsv($file, ['Title']);
-                foreach ($books as $book) {
-                    fputcsv($file, [$book->title]);
-                }
-            } elseif ($type === 'authors') {
-                fputcsv($file, ['Author']);
-                foreach ($books as $book) {
-                    fputcsv($file, [$book->author]);
-                }
+        $handle = fopen('php://memory', 'w');
+        
+        // Add headers based on type
+        if ($type === 'full') {
+            fputcsv($handle, ['Title', 'Author']);
+            foreach ($books as $book) {
+                fputcsv($handle, [$book->title, $book->author]);
             }
-            
-            fclose($file);
-        };
+        } elseif ($type === 'titles') {
+            fputcsv($handle, ['Title']);
+            foreach ($books as $book) {
+                fputcsv($handle, [$book->title]);
+            }
+        } elseif ($type === 'authors') {
+            fputcsv($handle, ['Author']);
+            foreach ($books as $book) {
+                fputcsv($handle, [$book->author]);
+            }
+        }
+        
+        rewind($handle);
+        $content = stream_get_contents($handle);
+        fclose($handle);
 
-        return response()->stream($callback, 200, $headers);
+        return response($content, 200, $headers);
     }
 
+    /**
+     * MODIFIED: Removed htmlspecialchars().
+     * SimpleXMLElement handles XML entity escaping automatically.
+     */
     private function exportXml($books, $type)
     {
         $filename = 'books_' . $type . '_' . date('Y-m-d_H-i-s') . '.xml';
