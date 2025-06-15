@@ -11,6 +11,17 @@ import {
 } from '@/components/ui/alert-dialog';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
+import {
+    DropdownMenu,
+    DropdownMenuContent,
+    DropdownMenuItem,
+    DropdownMenuLabel,
+    DropdownMenuSeparator,
+    DropdownMenuSub,
+    DropdownMenuSubContent,
+    DropdownMenuSubTrigger,
+    DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
 import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
 import { Input } from '@/components/ui/input';
 import { Sheet, SheetClose, SheetContent, SheetDescription, SheetFooter, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
@@ -22,7 +33,7 @@ import { zodResolver } from '@hookform/resolvers/zod';
 import { Head, usePage } from '@inertiajs/react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import axios from 'axios';
-import { ArrowDown, ArrowUp, BookOpen, Edit, LucideCircleHelp, Plus, Search, Sparkles, Trash2 } from 'lucide-react';
+import { ArrowDown, ArrowUp, BookOpen, Download, Edit, FileText, LucideCircleHelp, Plus, Search, Sparkles, Trash2 } from 'lucide-react';
 import { useCallback, useEffect, useState } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
@@ -203,6 +214,18 @@ const Books = () => {
         }
     };
 
+    const handleExport = (format: string, type: string) => {
+        const params = new URLSearchParams({
+            format: format,
+            type: type,
+            search: debouncedSearchTerm || '',
+            sortField: sortField,
+            sortDirection: sortDirection,
+        });
+
+        window.open(`/books/export?${params.toString()}`, '_blank');
+    };
+
     return (
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Book Management" />
@@ -312,8 +335,8 @@ const Books = () => {
 
                 <Card className="w-full max-w-6xl transition-all duration-300 hover:shadow-lg">
                     <CardContent>
-                        <div className="mb-6">
-                            <div className="relative mx-auto max-w-md">
+                        <div className="mb-6 flex flex-col gap-4 md:flex-row md:items-center md:justify-between">
+                            <div className="relative mx-auto max-w-md md:mx-0">
                                 <Search className="absolute top-1/2 left-3 h-4 w-4 -translate-y-1/2 text-gray-400" />
                                 <Input
                                     placeholder="Search books by title or author"
@@ -327,6 +350,41 @@ const Books = () => {
                                     </div>
                                 )}
                             </div>
+
+                            <DropdownMenu>
+                                <DropdownMenuTrigger asChild>
+                                    <Button variant="outline" className="gap-2">
+                                        <Download className="h-4 w-4" />
+                                        Export
+                                    </Button>
+                                </DropdownMenuTrigger>
+                                <DropdownMenuContent align="end" className="w-48">
+                                    <DropdownMenuLabel>Export Format</DropdownMenuLabel>
+                                    <DropdownMenuSeparator />
+                                    <DropdownMenuSub>
+                                        <DropdownMenuSubTrigger>
+                                            <FileText className="mr-2 h-4 w-4" />
+                                            CSV
+                                        </DropdownMenuSubTrigger>
+                                        <DropdownMenuSubContent>
+                                            <DropdownMenuItem onClick={() => handleExport('csv', 'full')}>Title & Author</DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => handleExport('csv', 'titles')}>Titles Only</DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => handleExport('csv', 'authors')}>Authors Only</DropdownMenuItem>
+                                        </DropdownMenuSubContent>
+                                    </DropdownMenuSub>
+                                    <DropdownMenuSub>
+                                        <DropdownMenuSubTrigger>
+                                            <FileText className="mr-2 h-4 w-4" />
+                                            XML
+                                        </DropdownMenuSubTrigger>
+                                        <DropdownMenuSubContent>
+                                            <DropdownMenuItem onClick={() => handleExport('xml', 'full')}>Title & Author</DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => handleExport('xml', 'titles')}>Titles Only</DropdownMenuItem>
+                                            <DropdownMenuItem onClick={() => handleExport('xml', 'authors')}>Authors Only</DropdownMenuItem>
+                                        </DropdownMenuSubContent>
+                                    </DropdownMenuSub>
+                                </DropdownMenuContent>
+                            </DropdownMenu>
                         </div>
 
                         <div className="overflow-hidden rounded-lg border border-gray-200 dark:border-gray-700">
