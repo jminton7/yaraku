@@ -39,7 +39,6 @@ export default function Welcome() {
                     </nav>
                 </header>
                 <div className="flex w-full items-center justify-center opacity-100 transition-opacity duration-750 lg:grow starting:opacity-0">
-                    {/* TODO too small will make a bigger one */}
                     <img src="/images/yarakubooks.png" />
                 </div>
                 <div className="hidden h-14.5 lg:block"></div>
