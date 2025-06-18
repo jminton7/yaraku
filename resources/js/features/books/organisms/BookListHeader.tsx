@@ -1,5 +1,5 @@
-import ExportDropdown from '@/components/molecules/ExportDropdown';
-import SearchInput from '@/components/molecules/SearchInput';
+import ExportDropdown from '@/features/books/molecules/ExportDropdown';
+import SearchInput from '@/features/books/molecules/SearchInput';
 
 interface BookListHeaderProps {
     searchTerm: string;

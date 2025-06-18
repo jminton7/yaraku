@@ -1,6 +1,6 @@
 import { BookOpen, Sparkles } from 'lucide-react';
 
-const BookHeaderAtom = () => (
+const BookHeader = () => (
     <div className="mb-2 text-center">
         <div className="mb-4 flex items-center justify-center">
             <div className="mr-4 rounded-full bg-blue-100 p-3 dark:bg-blue-900/30">
@@ -17,4 +17,4 @@ const BookHeaderAtom = () => (
     </div>
 );
 
-export default BookHeaderAtom;
+export default BookHeader;

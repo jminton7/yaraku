@@ -62,10 +62,10 @@ export default function Home() {
                     </div>
                 </div>
 
-                <div className="mt-12 text-center">
+                <div className="mt-12 pb-5 text-center">
                     <p className="mb-4 text-gray-600 dark:text-gray-400">Ready to organize your reading collection?</p>
                     <Link href="/books">
-                        <Button size="lg" className="bg-blue-600 px-8 py-3 text-lg text-white hover:bg-blue-700">
+                        <Button size="lg" className="cursor-pointer bg-blue-600 px-8 py-3 text-lg text-white hover:bg-blue-700">
                             Start Managing Books
                         </Button>
                     </Link>

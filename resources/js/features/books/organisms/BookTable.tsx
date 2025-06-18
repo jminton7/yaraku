@@ -1,5 +1,5 @@
-import SortableTableHeader from '@/components/molecules/SortableTableHeader';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
+import SortableTableHeader from '@/features/books/molecules/SortableTableHeader';
 import { Book } from '@/types';
 import BookTableRow from './BookTableRow';
 

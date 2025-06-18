@@ -10,14 +10,14 @@ import { addBook, exportBooks, fetchBooks } from '@/services/bookService';
 import { Book, BreadcrumbItem, PageProps } from '@/types';
 
 // Atoms & Molecules
-import BookCardHeaderAtom from '@/components/atoms/BookCardHeaderAtom';
-import BookHeaderAtom from '@/components/atoms/BookHeaderAtom';
+import BookCardHeader from '@/features/books/atoms/BookCardHeader';
+import BookHeader from '@/features/books/atoms/BookHeader';
 
 // Organisms
-import BookForm, { BookFormData } from '@/components/organisms/BookForm';
-import BookListHeader from '@/components/organisms/BookListHeader';
-import BookTable from '@/components/organisms/BookTable';
 import { Card, CardContent } from '@/components/ui/card';
+import BookForm, { BookFormData } from '@/features/books/organisms/BookForm';
+import BookListHeader from '@/features/books/organisms/BookListHeader';
+import BookTable from '@/features/books/organisms/BookTable';
 
 const breadcrumbs: BreadcrumbItem[] = [{ title: 'Book Management', href: '/books' }];
 
@@ -73,16 +73,16 @@ const BooksPage = () => {
         <AppLayout breadcrumbs={breadcrumbs}>
             <Head title="Book Management" />
             <div className="flex flex-col items-center gap-8 px-4 py-8">
-                <BookHeaderAtom />
+                <BookHeader />
 
                 <Card className="group w-full max-w-2xl bg-gradient-to-br from-blue-50 to-indigo-50 transition-all duration-300 hover:-translate-y-1 hover:shadow-xl dark:from-blue-900/20 dark:to-indigo-900/20">
-                    <BookCardHeaderAtom />
+                    <BookCardHeader />
                     <CardContent>
                         <BookForm onSubmit={handleAddBook} isPending={isAdding} />
                     </CardContent>
                 </Card>
 
-                <Card className="w-full max-w-6xl transition-all duration-300">
+                <Card className="w-full max-w-6xl p-3 transition-all duration-300">
                     <BookListHeader
                         searchTerm={searchTerm}
                         onSearchChange={(e) => setSearchTerm(e.target.value)}

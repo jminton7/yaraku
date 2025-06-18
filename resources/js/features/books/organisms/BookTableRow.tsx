@@ -28,7 +28,7 @@ const BookTableRow = ({ book, index }: BookTableRowProps) => {
                         <Button
                             variant="ghost"
                             size="sm"
-                            className="h-8 w-8 p-0 text-blue-600 transition-colors hover:bg-blue-50 hover:text-blue-700 dark:text-blue-400 dark:hover:bg-blue-900/20"
+                            className="h-8 w-8 cursor-pointer p-0 text-blue-600 transition-colors hover:bg-blue-50 hover:text-blue-700 dark:text-blue-400 dark:hover:bg-blue-900/20"
                             onClick={() => setIsEditSheetOpen(true)}
                         >
                             <Edit className="h-4 w-4" />
@@ -37,7 +37,7 @@ const BookTableRow = ({ book, index }: BookTableRowProps) => {
                         <Button
                             variant="ghost"
                             size="sm"
-                            className="h-8 w-8 p-0 text-red-600 transition-colors hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-900/20"
+                            className="h-8 w-8 cursor-pointer p-0 text-red-600 transition-colors hover:bg-red-50 hover:text-red-700 dark:text-red-400 dark:hover:bg-red-900/20"
                             onClick={() => setIsDeleteDialogOpen(true)}
                         >
                             <Trash2 className="h-4 w-4" />

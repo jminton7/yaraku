@@ -1,6 +1,6 @@
-import FormFieldAtom from '@/components/atoms/FormField';
 import { Button } from '@/components/ui/button';
 import { Form } from '@/components/ui/form';
+import FormFieldAtom from '@/features/books/atoms/FormField';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { Loader2, Plus } from 'lucide-react';
 import { useForm, UseFormReturn } from 'react-hook-form';
@@ -59,7 +59,7 @@ const BookForm = ({
                 <div className="flex justify-center pt-4">
                     <Button
                         type="submit"
-                        className="w-40 bg-blue-600 text-white transition-all duration-200 hover:bg-blue-700 hover:shadow-lg disabled:opacity-50"
+                        className="w-40 cursor-pointer bg-blue-600 text-white transition-all duration-200 hover:bg-blue-700 hover:shadow-lg disabled:opacity-50"
                         disabled={isPending}
                     >
                         {isPending ? (

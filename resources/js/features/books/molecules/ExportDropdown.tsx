@@ -19,7 +19,7 @@ interface ExportDropdownProps {
 const ExportDropdown = ({ onExport }: ExportDropdownProps) => (
     <DropdownMenu>
         <DropdownMenuTrigger asChild>
-            <Button variant="outline" className="gap-2">
+            <Button variant="outline" className="cursor-pointer gap-2">
                 <Download className="h-4 w-4" />
                 Export
             </Button>
