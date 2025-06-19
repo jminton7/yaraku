@@ -12,10 +12,8 @@ RUN apt-get update && apt-get install -y \
     nodejs \
     npm \
     sqlite3 \
-    libsqlite3-dev
-
-# Clear cache
-RUN apt-get clean && rm -rf /var/lib/apt/lists/*
+    libsqlite3-dev \
+    && apt-get clean && rm -rf /var/lib/apt/lists/*
 
 # Install PHP extensions
 RUN docker-php-ext-install pdo_sqlite mbstring exif pcntl bcmath gd
@@ -26,24 +24,27 @@ COPY --from=composer:latest /usr/bin/composer /usr/bin/composer
 # Set working directory
 WORKDIR /var/www
 
-# Copy existing application directory contents
-COPY . /var/www
+# Copy only composer files and the artisan script needed for Composer scripts
+COPY composer.json composer.lock ./
+COPY artisan ./
+COPY bootstrap/app.php bootstrap/app.php
 
 # Install PHP dependencies
-RUN composer install
+RUN composer install --optimize-autoloader --no-scripts
 
-# Install Node dependencies and build assets
+# After composer install, copy the rest of the application.
+COPY . /var/www
+
+# Install Node dependencies
 RUN npm install
+
+# Build assets
 RUN npm run build
 
-# Create database directory and file
-RUN mkdir -p /var/www/database
-RUN touch /var/www/database/database.sqlite
-
-# Change ownership of our applications
+# Ensure proper permissions for www-data
 RUN chown -R www-data:www-data /var/www
-RUN chmod -R 755 /var/www/storage
-RUN chmod -R 755 /var/www/database
+RUN chmod -R 755 /var/www
 
 EXPOSE 9000
+
 CMD ["php-fpm"]

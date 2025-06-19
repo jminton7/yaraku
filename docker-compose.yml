@@ -9,14 +9,27 @@ services:
     environment:
       - DB_CONNECTION=sqlite
       - DB_DATABASE=/var/www/database/database.sqlite
+      - APP_URL=http://localhost:8080
+      - SESSION_DOMAIN=localhost
+      - SESSION_DRIVER=file
+      - SESSION_SECURE_COOKIE=false
     volumes:
       - ./:/var/www
+      - vendor_data:/var/www/vendor
       - /var/www/node_modules
       - ./docker/php/local.ini:/usr/local/etc/php/conf.d/local.ini
-    command: sh -c "npm run build && php-fpm"
+    command: sh -c "
+      mkdir -p /var/www/database &&
+      touch /var/www/database/database.sqlite &&
+      chmod 666 /var/www/database/database.sqlite &&
+      chmod -R 777 storage bootstrap/cache &&
+      php artisan config:clear &&
+      php artisan cache:clear &&
+      php artisan config:cache &&
+      php artisan migrate --force &&
+      php-fpm"
     networks:
       - laravel
-
   webserver:
     image: nginx:alpine
     container_name: laravel_webserver
@@ -28,7 +41,6 @@ services:
       - ./docker/nginx/conf.d/:/etc/nginx/conf.d/
     networks:
       - laravel
-
   redis:
     image: redis:alpine
     container_name: laravel_redis
@@ -37,7 +49,8 @@ services:
       - '6380:6379'
     networks:
       - laravel
-
 networks:
   laravel:
     driver: bridge
+volumes:
+  vendor_data:
